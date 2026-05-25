@@ -1,3 +1,5 @@
+# Università della Svizzera italiana / Informatics Department / Theory of Computation Lab 3
+
 # k-clique-app
 
 This repository contains a small web app (frontend + backend) used for the k-clique assignment.
