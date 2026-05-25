@@ -48,4 +48,5 @@ python app.py
 Notes
 - The script moves only files above a size threshold into `backend/local_data/`. If you want to keep some files in repo, move them back before committing.
 - If your solver binary is local and not allowed to be committed, put it in `backend/local_data/` and update your local config to point to that path.
+- Sample graph inputs are organized in `backend/graphs/`.
 
