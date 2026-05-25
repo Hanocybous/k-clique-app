@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import z3_solver as solver
-from subprocess import Popen, PIPE
+import social_solver.z3_solver as solver
 import re
 
 app = Flask(__name__)
@@ -11,26 +10,27 @@ CORS(app)
 @app.route('/solve', methods=['POST'])
 def solve():
     data = request.json
-    n, k, edges = data['n'], data['k'], data['edges']
+    n, k = data['n'], int(data['k'])
+
+    # THE FIX: Convert JSON lists into Python tuples
+    edges = [tuple(edge) for edge in data['edges']]
 
     solver.reset_globals()
     kwargs = {'n': n, 'k': k, 'edges': edges}
-    solver.genVarNames(**kwargs)
-    clauses = solver.genClauses(**kwargs)
+    solver.gen_var_names(**kwargs)
+    clauses = solver.gen_clauses(**kwargs)
 
     with open("solve_request.cnf", "w") as f:
-        f.write(f"{solver.getDimacsHeader(clauses)}\n{solver.toDimacsCnf(clauses)}\n")
+        f.write(f"{solver.get_dimacs_header(clauses)}\n{solver.to_dimacs_cnf(clauses)}\n")
 
-    process = Popen([solver.SATsolver + " solve_request.cnf"], stdout=PIPE, shell=True)
-    output = process.communicate()[0].decode('utf-8').strip().split('\n')
+    asgn = solver.solve_clauses(clauses)
 
-    if output[0] == "s SATISFIABLE":
-        asgn = map(int, output[1].split()[1:])
-        facts = [solver.varNumberToName(abs(x)) for x in asgn if x > 0]
+    if asgn is not None:
+        facts = [solver.var_number_to_name(x) for x in asgn]
         clique = [int(re.search(r',(\d+)\)', f).group(1)) for f in facts if "inClique" in f]
         return jsonify({"status": "SAT", "nodes": clique})
-
-    return jsonify({"status": "UNSAT", "nodes": []})
+    else:
+        return jsonify({"status": "UNSAT"})
 
 
 if __name__ == '__main__':
