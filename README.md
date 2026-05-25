@@ -45,6 +45,21 @@ Set-Location backend
 python app.py
 ```
 
+- Start frontend (in a second terminal):
+
+```powershell
+Set-Location frontend
+npm install
+npm run dev
+```
+
+- Optional backend test check:
+
+```powershell
+Set-Location .
+python -m unittest discover -s tests -q
+```
+
 Notes
 - The script moves only files above a size threshold into `backend/local_data/`. If you want to keep some files in repo, move them back before committing.
 - If your solver binary is local and not allowed to be committed, put it in `backend/local_data/` and update your local config to point to that path.
