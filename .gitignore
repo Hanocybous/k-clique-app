@@ -53,6 +53,9 @@ backend/local_data/
 # Logs
 *.log
 
+# Test cache
+.pytest_cache/
+
 # Lock files
 uv.lock
 

@@ -12,16 +12,12 @@ def solve():
     data = request.json
     n, k = data['n'], int(data['k'])
 
-    # THE FIX: Convert JSON lists into Python tuples
     edges = [tuple(edge) for edge in data['edges']]
 
     solver.reset_globals()
     kwargs = {'n': n, 'k': k, 'edges': edges}
     solver.gen_var_names(**kwargs)
     clauses = solver.gen_clauses(**kwargs)
-
-    with open("solve_request.cnf", "w") as f:
-        f.write(f"{solver.get_dimacs_header(clauses)}\n{solver.to_dimacs_cnf(clauses)}\n")
 
     asgn = solver.solve_clauses(clauses)
 
