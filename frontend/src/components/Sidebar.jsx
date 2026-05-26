@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Sidebar({
+function Sidebar({
   isSidebarOpen, setIsSidebarOpen, fileName, numNodes,
   kValue, setKValue,
   handleFileUpload, searchQuery, setSearchQuery, handleSearch,
@@ -295,3 +295,5 @@ export default function Sidebar({
     </>
   );
 }
+
+export default React.memo(Sidebar);

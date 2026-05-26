@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import * as THREE from 'three';
 import {
@@ -13,7 +13,16 @@ import {
   getNodeColorFromCentrality
 } from '../utils/graphAnalysis';
 
+// Cache for text sprites to avoid creating them on every render
+const spriteCache = new Map();
+
 function createTextSprite(text, isHighlighted, isDarkMode) {
+  const cacheKey = `${text}_${isHighlighted}_${isDarkMode}`;
+  
+  if (spriteCache.has(cacheKey)) {
+    return spriteCache.get(cacheKey).clone();
+  }
+  
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   canvas.width = 256; canvas.height = 128;
@@ -25,7 +34,13 @@ function createTextSprite(text, isHighlighted, isDarkMode) {
   const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
   const sprite = new THREE.Sprite(spriteMaterial);
   sprite.scale.set(18, 9, 1);
-  return sprite;
+  
+  // Cache the sprite template
+  if (spriteCache.size < 100) {
+    spriteCache.set(cacheKey, sprite);
+  }
+  
+  return sprite.clone();
 }
 
 // Generates a permanent, stable rotation angle based on the connected Node IDs
@@ -45,6 +60,13 @@ export default React.forwardRef(({
   layoutType, colorScheme, isDarkMode
 }, ref) => {
   const [centrality, setCentrality] = useState({});
+  const internalRef = useRef(null);
+
+  // Convert arrays to Sets for O(1) lookups
+  const cliqueSet = useMemo(() => new Set(clique), [clique]);
+  const wormholeNodesSet = useMemo(() => new Set(wormholeNodes.map(n => n.id)), [wormholeNodes]);
+  const selectedNodeId = useMemo(() => selectedNode?.id, [selectedNode]);
+  const selectedNodeNeighbors = useMemo(() => new Set(selectedNode?.neighbors || []), [selectedNode?.neighbors]);
 
   // Update layout when layoutType changes
   useEffect(() => {
@@ -61,16 +83,15 @@ export default React.forwardRef(({
       applyHierarchicalLayout(nodesCopy, graphData.links);
     }
 
-    if (ref?.current) {
-      ref.current.d3ReheatSimulation();
+    if (internalRef.current) {
+      internalRef.current.d3ReheatSimulation();
     }
-  }, [layoutType, graphData.nodes.length, ref]);
+  }, [layoutType, graphData.nodes.length]);
 
-  // Compute centrality based on colorScheme
-  useEffect(() => {
+  // Compute and memoize centrality based on colorScheme
+  const memoizedCentrality = useMemo(() => {
     if (!graphData.nodes || graphData.nodes.length === 0) {
-      setCentrality({});
-      return;
+      return {};
     }
 
     let newCentrality;
@@ -85,13 +106,24 @@ export default React.forwardRef(({
     } else {
       newCentrality = computeDegreeCentrality(graphData.nodes, graphData.links);
     }
-
-    setCentrality(newCentrality);
+    return newCentrality;
   }, [colorScheme, graphData.nodes.length, graphData.links.length]);
+
+  useEffect(() => {
+    setCentrality(memoizedCentrality);
+  }, [memoizedCentrality]);
+
+  // Memoize wormhole check function
+  const isWormholeLink = useMemo(() => {
+    return (sid, tid) => wormholeNodesSet.has(sid) && wormholeNodesSet.has(tid);
+  }, [wormholeNodesSet]);
+
+  // Forward ref to internal ref
+  React.useImperativeHandle(ref, () => internalRef.current);
 
   return (
     <ForceGraph3D
-      ref={ref}
+      ref={internalRef}
       graphData={graphData}
       backgroundColor={isDarkMode ? "#020306" : "#ffffff"}
       onNodeClick={handleNodeClick}
@@ -103,7 +135,7 @@ export default React.forwardRef(({
         if (!curvedLinks) return 0;
         const sid = link.source.id || link.source;
         const tid = link.target.id || link.target;
-        if (wormholeNodes.some(n => n.id === sid) && wormholeNodes.some(n => n.id === tid)) return 0;
+        if (isWormholeLink(sid, tid)) return 0;
         return 0.25;
       }}
       linkCurveRotation={getStableCurveRotation}
@@ -111,10 +143,10 @@ export default React.forwardRef(({
       nodeThreeObject={node => {
         if ((node.neighbors?.length || 0) < minConnections) return new THREE.Object3D();
 
-        const isClique = clique.includes(node.id);
-        const isSelected = selectedNode && node.id === selectedNode.id;
+        const isClique = cliqueSet.has(node.id);
+        const isSelected = selectedNodeId === node.id;
         const isScanning = scanningNode === node.id;
-        const isDimmed = (selectedNode && !isSelected && !selectedNode.neighbors.includes(node.id)) || (clique.length > 0 && !isClique);
+        const isDimmed = (selectedNode && !isSelected && !selectedNodeNeighbors.has(node.id)) || (clique.length > 0 && !isClique);
 
         // Use centrality for base color
         const centralityValue = centrality[node.id] || 0;
@@ -156,11 +188,11 @@ export default React.forwardRef(({
       linkColor={link => {
         const sid = link.source.id || link.source;
         const tid = link.target.id || link.target;
-        if (wormholeNodes.some(n => n.id === sid) && wormholeNodes.some(n => n.id === tid)) return '#ff00ff';
-        if (clique.includes(sid) && clique.includes(tid)) return '#00ffff';
+        if (isWormholeLink(sid, tid)) return '#ff00ff';
+        if (cliqueSet.has(sid) && cliqueSet.has(tid)) return '#00ffff';
         if (scanningNode === sid || scanningNode === tid) return 'rgba(255, 51, 102, 0.9)';
 
-        const isDimmed = (selectedNode && !(sid === selectedNode.id || tid === selectedNode.id)) || (clique.length > 0 && !(clique.includes(sid) && clique.includes(tid)));
+        const isDimmed = (selectedNode && !(sid === selectedNodeId || tid === selectedNodeId)) || (clique.length > 0 && !(cliqueSet.has(sid) && cliqueSet.has(tid)));
 
         // Dynamic opacity based on your slider
         const finalAlpha = isDimmed ? 0.05 : linkOpacity;
@@ -175,7 +207,7 @@ export default React.forwardRef(({
 
         // Base thickness multiplied by your slider
         let baseWidth = (scanningNode === sid || scanningNode === tid) ? 1.5 : 1.0;
-        if (clique.includes(sid) && clique.includes(tid)) baseWidth = 2.5;
+        if (cliqueSet.has(sid) && cliqueSet.has(tid)) baseWidth = 2.5;
 
         return baseWidth * linkThickness;
       }}
@@ -183,7 +215,7 @@ export default React.forwardRef(({
       linkDirectionalParticles={link => {
         const sid = link.source.id || link.source;
         const tid = link.target.id || link.target;
-        if (clique.includes(sid) && clique.includes(tid)) return 4;
+        if (cliqueSet.has(sid) && cliqueSet.has(tid)) return 4;
         if (scanningNode === sid || scanningNode === tid) return 2;
         return 0;
       }}
@@ -192,7 +224,7 @@ export default React.forwardRef(({
       linkDirectionalParticleColor={link => {
         const sid = link.source.id || link.source;
         const tid = link.target.id || link.target;
-        if (clique.includes(sid) && clique.includes(tid)) return '#ffffff';
+        if (cliqueSet.has(sid) && cliqueSet.has(tid)) return '#ffffff';
         return '#ff3366';
       }}
     />

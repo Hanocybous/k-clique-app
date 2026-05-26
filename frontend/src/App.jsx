@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { forceLink } from 'd3-force';
 import Sidebar from './components/Sidebar';
 import GraphCanvas from './components/GraphCanvas';
@@ -236,22 +236,29 @@ export default function App() {
 
   const maxConnections = Math.max(1, ...graphData.nodes.map(n => n.neighbors?.length || 0));
 
+  // Memoize callbacks to prevent unnecessary re-renders
+  const memoizedHandleFileUpload = useCallback(handleFileUpload, []);
+  const memoizedHandleSearch = useCallback(handleSearch, [graphData.nodes, selectedNode]);
+  const memoizedHandleSolve = useCallback(handleSolve, [graphData, kValue, numNodes, fgRef]);
+  const memoizedHandleGenerateGraph = useCallback(handleGenerateGraph, [genNodes, genEdges, fgRef]);
+  const memoizedHandleNodeClick = useCallback(handleNodeClick, [selectedNode, fgRef]);
+
    return (
      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', background: isDarkMode ? '#020306' : '#f5f5f7' }}>
        <Sidebar
-         isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
-         fileName={fileName} numNodes={numNodes}
-         kValue={kValue} setKValue={setKValue}
-         handleFileUpload={handleFileUpload} isSolving={isSolving} handleSolve={handleSolve}
-         searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch}
-         repulsion={repulsion} setRepulsion={setRepulsion}
-         minConnections={minConnections} setMinConnections={setMinConnections}
-         linkOpacity={linkOpacity} setLinkOpacity={setLinkOpacity}
-         linkThickness={linkThickness} setLinkThickness={setLinkThickness}
-         nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
-         curvedLinks={curvedLinks} setCurvedLinks={setCurvedLinks}
+          isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
+          fileName={fileName} numNodes={numNodes}
+          kValue={kValue} setKValue={setKValue}
+          handleFileUpload={memoizedHandleFileUpload} isSolving={isSolving} handleSolve={memoizedHandleSolve}
+          searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={memoizedHandleSearch}
+          repulsion={repulsion} setRepulsion={setRepulsion}
+          minConnections={minConnections} setMinConnections={setMinConnections}
+          linkOpacity={linkOpacity} setLinkOpacity={setLinkOpacity}
+          linkThickness={linkThickness} setLinkThickness={setLinkThickness}
+          nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
+          curvedLinks={curvedLinks} setCurvedLinks={setCurvedLinks}
           genNodes={genNodes} setGenNodes={setGenNodes}
-          genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
+          genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={memoizedHandleGenerateGraph}
           solverResult={solverResult} setSolverResult={setSolverResult} clique={clique}
           isCinematic={isCinematic} setIsCinematic={setIsCinematic}
           layoutType={layoutType} setLayoutType={setLayoutType}
@@ -262,7 +269,7 @@ export default function App() {
        <GraphCanvas
          ref={fgRef} graphData={graphData} clique={clique}
          selectedNode={selectedNode} minConnections={minConnections}
-         wormholeNodes={wormholeNodes} handleNodeClick={handleNodeClick}
+         wormholeNodes={wormholeNodes} handleNodeClick={memoizedHandleNodeClick}
          scanningNode={scanningNode} maxConnections={maxConnections}
          linkOpacity={linkOpacity} linkThickness={linkThickness}
          nodeSizeScale={nodeSizeScale} curvedLinks={curvedLinks}
