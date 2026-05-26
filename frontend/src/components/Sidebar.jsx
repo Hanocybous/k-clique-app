@@ -91,7 +91,7 @@ export default function Sidebar({
                  transition: '0.2s'
                }}
              >
-               {isCinematic ? '🎥 Cinematic Show In Progress...' : '▶ Start Cinematic Demo'}
+               {isCinematic ? 'Cinematic In Progress...' : '▶ Start Cinematic Demo'}
              </button>
              <p style={{ fontSize: '0.75em', color: '#8fe8ff', marginTop: '8px', marginBottom: '0', fontStyle: 'italic' }}>
                Auto-guided tour through the graph with smooth camera movements
