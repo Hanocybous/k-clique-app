@@ -103,7 +103,7 @@ def run_benchmark(filepath, override_k=None):
     print(f"Surviving Nodes: {n_new} | Surviving Edges: {len(edges_new)}")
     print("Generating SAT Clauses in memory...")
 
-    # --- RUN OPTIMIZED SAT SOLVER ---
+    # --- RUN SAT SOLVER ---
     solver.reset_globals()
     kwargs = {'n': n_new, 'k': k, 'edges': edges_new}
     solver.gen_var_names(**kwargs)
