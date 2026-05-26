@@ -1,3 +1,0 @@
-﻿This file was moved to 'backend/local_data/' to keep the repository small.
-Original size: 854362 bytes.
-To restore, run .\scripts\restore_data.ps1
