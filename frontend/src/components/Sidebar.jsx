@@ -9,7 +9,8 @@ export default function Sidebar({
   linkOpacity, setLinkOpacity, linkThickness, setLinkThickness,
   nodeSizeScale, setNodeSizeScale, curvedLinks, setCurvedLinks,
   genNodes, setGenNodes, genEdges, setGenEdges, handleGenerateGraph,
-  solverResult, setSolverResult, clique
+  solverResult, setSolverResult, clique,
+  isCinematic, setIsCinematic
 }) {
   const glassPanelStyle = {
     position: 'absolute', top: 0, left: isSidebarOpen ? 0 : '-380px', width: '360px', height: '100vh',
@@ -69,10 +70,35 @@ export default function Sidebar({
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
                 <input type="number" placeholder="Enter ID..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ flex: 1, padding: '8px', background: '#1c212e', border: 'none', color: '#fff', borderRadius: '4px' }} />
                 <button type="submit" style={{ padding: '0 16px', background: '#3a506b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>GO</button>
-            </form>
-        </div>
+             </form>
+         </div>
 
-        {/* Physics & Visuals */}
+         {/* CINEMATIC DEMO BUTTON */}
+         <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+             <label style={sectionLabelStyle}>🎬 Presentation Mode</label>
+             <button 
+               disabled={isCinematic} 
+               onClick={() => setIsCinematic(true)}
+               style={{ 
+                 padding: '12px', 
+                 background: isCinematic ? '#333' : 'rgba(255, 100, 200, 0.15)', 
+                 color: isCinematic ? '#888' : '#ff64c8', 
+                 border: '1px solid rgba(255, 100, 200, 0.5)', 
+                 borderRadius: '6px', 
+                 cursor: isCinematic ? 'wait' : 'pointer', 
+                 fontWeight: 'bold', 
+                 width: '100%',
+                 transition: '0.2s'
+               }}
+             >
+               {isCinematic ? '🎥 Cinematic Show In Progress...' : '▶ Start Cinematic Demo'}
+             </button>
+             <p style={{ fontSize: '0.75em', color: '#8fe8ff', marginTop: '8px', marginBottom: '0', fontStyle: 'italic' }}>
+               Auto-guided tour through the graph with smooth camera movements
+             </p>
+         </div>
+
+         
         <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <label style={sectionLabelStyle}>3. Universe Physics</label>
             <span style={{ fontSize: '0.85em', color: '#9fbfdc' }}>Gravity Repulsion: {repulsion}</span>

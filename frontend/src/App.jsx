@@ -37,6 +37,9 @@ export default function App() {
   const [genNodes, setGenNodes] = useState(100);
   const [genEdges, setGenEdges] = useState(3);
 
+  // Cinematic Demo State
+  const [isCinematic, setIsCinematic] = useState(false);
+
   // Solver Animation Logic (Sonar Pathfinder)
   useEffect(() => {
     let interval;
@@ -67,7 +70,66 @@ export default function App() {
       setScanningNode(null);
     }
     return () => clearInterval(interval);
-  }, [isSolving, graphData]);
+   }, [isSolving, graphData]);
+
+  // Cinematic Demo Mode
+  useEffect(() => {
+    if (!isCinematic || graphData.nodes.length === 0 || !fgRef.current) return;
+
+    const runCinematicDemo = async () => {
+      try {
+        const nodes = graphData.nodes;
+        const centerX = nodes.reduce((sum, n) => sum + n.x, 0) / nodes.length;
+        const centerY = nodes.reduce((sum, n) => sum + n.y, 0) / nodes.length;
+        const centerZ = nodes.reduce((sum, n) => sum + n.z, 0) / nodes.length;
+
+        // Scene 1: Zoom out to see entire graph
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        fgRef.current.cameraPosition({ x: centerX + 300, y: centerY + 300, z: centerZ + 300 }, { x: centerX, y: centerY, z: centerZ }, 3000);
+
+        // Scene 2: Orbit around center
+        for (let i = 0; i < 3; i++) {
+          await new Promise(resolve => setTimeout(resolve, 2500));
+          const angle = (i + 1) * (Math.PI * 2 / 3);
+          fgRef.current.cameraPosition(
+            { x: centerX + 300 * Math.cos(angle), y: centerY + 200, z: centerZ + 300 * Math.sin(angle) },
+            { x: centerX, y: centerY, z: centerZ },
+            2500
+          );
+        }
+
+        // Scene 3: Zoom into random clusters
+        const clusters = [];
+        for (let c = 0; c < 3; c++) {
+          const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
+          clusters.push(randomNode);
+        }
+
+        for (const node of clusters) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          fgRef.current.cameraPosition({ x: node.x + 150, y: node.y + 100, z: node.z + 150 }, node, 2500);
+        }
+
+        // Scene 4: Close-up of highest degree node
+        const highestDegreeNode = nodes.reduce((max, n) => (n.neighbors?.length || 0) > (max.neighbors?.length || 0) ? n : max);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        fgRef.current.cameraPosition({ x: highestDegreeNode.x + 80, y: highestDegreeNode.y + 60, z: highestDegreeNode.z + 80 }, highestDegreeNode, 2500);
+
+        // Scene 5: Final panorama zoom out
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        fgRef.current.cameraPosition({ x: centerX + 500, y: centerY + 400, z: centerZ + 500 }, { x: centerX, y: centerY, z: centerZ }, 4000);
+
+        // Done
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setIsCinematic(false);
+      } catch (e) {
+        console.error('Cinematic demo error:', e);
+        setIsCinematic(false);
+      }
+    };
+
+    runCinematicDemo();
+  }, [isCinematic, graphData.nodes]);
 
   // Apply Physics Repulsion
   useEffect(() => {
@@ -186,6 +248,7 @@ export default function App() {
          genNodes={genNodes} setGenNodes={setGenNodes}
          genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
          solverResult={solverResult} setSolverResult={setSolverResult} clique={clique}
+         isCinematic={isCinematic} setIsCinematic={setIsCinematic}
        />
 
       <GraphCanvas
