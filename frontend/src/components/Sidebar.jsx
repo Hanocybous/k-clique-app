@@ -2,13 +2,14 @@ import React from 'react';
 
 export default function Sidebar({
   isSidebarOpen, setIsSidebarOpen, fileName, numNodes,
-  kValue, setKValue, // <-- Make sure setKValue is received here
+  kValue, setKValue,
   handleFileUpload, searchQuery, setSearchQuery, handleSearch,
   repulsion, setRepulsion, minConnections, setMinConnections,
   isSolving, handleSolve,
   linkOpacity, setLinkOpacity, linkThickness, setLinkThickness,
   nodeSizeScale, setNodeSizeScale, curvedLinks, setCurvedLinks,
-  genNodes, setGenNodes, genEdges, setGenEdges, handleGenerateGraph
+  genNodes, setGenNodes, genEdges, setGenEdges, handleGenerateGraph,
+  solverResult, setSolverResult, clique
 }) {
   const glassPanelStyle = {
     position: 'absolute', top: 0, left: isSidebarOpen ? 0 : '-380px', width: '360px', height: '100vh',
@@ -111,12 +112,88 @@ export default function Sidebar({
             <p style={{ fontSize: '0.7em', color: '#6b8cae', marginTop: '5px' }}>
                Warning: High <i style={{color:'#ff00ff'}}>k</i> values exponentially increase SAT complexity.
             </p>
-        </div>
+         </div>
 
-        <button disabled={isSolving} onClick={handleSolve}
-          style={{ padding: '16px', background: isSolving ? '#333' : '#00ffff', color: isSolving ? '#888' : '#000', border: 'none', borderRadius: '8px', cursor: isSolving ? 'wait' : 'pointer', fontWeight: 'bold', width: '100%', fontSize: '1.05em', boxShadow: isSolving ? 'none' : '0 0 15px rgba(0, 255, 255, 0.4)' }}>
-          {isSolving ? 'Scanning Topology...' : 'Run Z3 SAT Solver'}
-        </button>
+         {/* SOLVER RESULT DISPLAY */}
+         {solverResult && (
+           <div style={{
+             marginBottom: '15px',
+             padding: '16px',
+             borderRadius: '8px',
+             background: solverResult === 'SAT'
+               ? 'rgba(0, 255, 100, 0.15)'
+               : solverResult === 'UNSAT'
+               ? 'rgba(255, 100, 100, 0.15)'
+               : 'rgba(255, 200, 0, 0.15)',
+             border: solverResult === 'SAT'
+               ? '1px solid rgba(0, 255, 100, 0.5)'
+               : solverResult === 'UNSAT'
+               ? '1px solid rgba(255, 100, 100, 0.5)'
+               : '1px solid rgba(255, 200, 0, 0.5)',
+             color: solverResult === 'SAT'
+               ? '#00ff64'
+               : solverResult === 'UNSAT'
+               ? '#ff6464'
+               : '#ffc800'
+           }}>
+             {solverResult === 'SAT' && (
+               <>
+                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>✅ SATISFIABLE</div>
+                 <div style={{ fontSize: '0.9em', marginBottom: '8px' }}>
+                   Found a {kValue}-clique!
+                 </div>
+                 <div style={{ fontSize: '0.85em', fontFamily: 'monospace', background: 'rgba(0, 0, 0, 0.3)', padding: '8px', borderRadius: '4px' }}>
+                   Nodes: {clique.sort((a, b) => a - b).join(', ')}
+                 </div>
+                 <button
+                   onClick={() => setSolverResult(null)}
+                   style={{ marginTop: '10px', fontSize: '0.8em', padding: '6px 12px', background: 'rgba(0, 255, 100, 0.2)', border: '1px solid rgba(0, 255, 100, 0.5)', color: '#00ff64', borderRadius: '4px', cursor: 'pointer' }}
+                 >
+                   Dismiss
+                 </button>
+               </>
+             )}
+             {solverResult === 'UNSAT' && (
+               <>
+                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>❌ UNSATISFIABLE</div>
+                 <div style={{ fontSize: '0.9em' }}>
+                   No {kValue}-clique exists in this graph.
+                 </div>
+                 <p style={{ fontSize: '0.75em', color: '#ddd', marginTop: '8px', marginBottom: '0' }}>
+                   Try lowering <i style={{color:'#ff00ff'}}>k</i> or loading a larger graph.
+                 </p>
+                 <button
+                   onClick={() => setSolverResult(null)}
+                   style={{ marginTop: '10px', fontSize: '0.8em', padding: '6px 12px', background: 'rgba(255, 100, 100, 0.2)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ff6464', borderRadius: '4px', cursor: 'pointer' }}
+                 >
+                   Dismiss
+                 </button>
+               </>
+             )}
+             {solverResult === 'ERROR' && (
+               <>
+                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>⚠️ ERROR</div>
+                 <div style={{ fontSize: '0.9em' }}>
+                   Backend offline or connection error.
+                 </div>
+                 <p style={{ fontSize: '0.75em', color: '#ddd', marginTop: '8px', marginBottom: '0' }}>
+                   Make sure the backend is running on port 5000.
+                 </p>
+                 <button
+                   onClick={() => setSolverResult(null)}
+                   style={{ marginTop: '10px', fontSize: '0.8em', padding: '6px 12px', background: 'rgba(255, 200, 0, 0.2)', border: '1px solid rgba(255, 200, 0, 0.5)', color: '#ffc800', borderRadius: '4px', cursor: 'pointer' }}
+                 >
+                   Dismiss
+                 </button>
+               </>
+             )}
+           </div>
+         )}
+
+         <button disabled={isSolving} onClick={handleSolve}
+           style={{ padding: '16px', background: isSolving ? '#333' : '#00ffff', color: isSolving ? '#888' : '#000', border: 'none', borderRadius: '8px', cursor: isSolving ? 'wait' : 'pointer', fontWeight: 'bold', width: '100%', fontSize: '1.05em', boxShadow: isSolving ? 'none' : '0 0 15px rgba(0, 255, 255, 0.4)' }}>
+           {isSolving ? 'Scanning Topology...' : 'Run Z3 SAT Solver'}
+         </button>
       </div>
     </>
   );

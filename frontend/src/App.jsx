@@ -13,6 +13,7 @@ export default function App() {
   const [kValue, setKValue] = useState(3);
   const [numNodes, setNumNodes] = useState(0);
   const [fileName, setFileName] = useState('');
+  const [solverResult, setSolverResult] = useState(null); // "SAT", "UNSAT", or null
 
   // Interaction State
   const [selectedNode, setSelectedNode] = useState(null);
@@ -116,33 +117,36 @@ export default function App() {
     } else { alert("Node not found!"); }
   };
 
-  const handleSolve = async () => {
-    if (graphData.links.length === 0) return;
-    setSelectedNode(null); setClique([]); setIsSolving(true);
+   const handleSolve = async () => {
+     if (graphData.links.length === 0) return;
+     setSelectedNode(null); setClique([]); setIsSolving(true); setSolverResult(null);
 
-    try {
-      const response = await fetch('http://localhost:5000/solve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          n: numNodes, k: kValue,
-          edges: graphData.links.map(l => [l.source.id || l.source, l.target.id || l.target])
-        })
-      });
-      const result = await response.json();
+     try {
+       const response = await fetch('http://localhost:5000/solve', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           n: numNodes, k: kValue,
+           edges: graphData.links.map(l => [l.source.id || l.source, l.target.id || l.target])
+         })
+       });
+       const result = await response.json();
 
-      if (result.status === "SAT") {
-        setClique(result.nodes);
-        const targetNodes = graphData.nodes.filter(n => result.nodes.includes(n.id));
-        if (targetNodes.length > 0 && fgRef.current) {
-          let cx = 0, cy = 0, cz = 0;
-          targetNodes.forEach(n => { cx += n.x; cy += n.y; cz += n.z; });
-          const len = targetNodes.length;
-          fgRef.current.cameraPosition({ x: (cx/len)+150, y: (cy/len)+100, z: (cz/len)+150 }, { x: cx/len, y: cy/len, z: cz/len }, 2000);
-        }
-      } else { alert(`UNSAT: No ${kValue}-clique found.`); }
-    } catch (error) { alert("Backend offline."); } finally { setIsSolving(false); }
-  };
+       if (result.status === "SAT") {
+         setSolverResult("SAT");
+         setClique(result.nodes);
+         const targetNodes = graphData.nodes.filter(n => result.nodes.includes(n.id));
+         if (targetNodes.length > 0 && fgRef.current) {
+           let cx = 0, cy = 0, cz = 0;
+           targetNodes.forEach(n => { cx += n.x; cy += n.y; cz += n.z; });
+           const len = targetNodes.length;
+           fgRef.current.cameraPosition({ x: (cx/len)+150, y: (cy/len)+100, z: (cz/len)+150 }, { x: cx/len, y: cy/len, z: cz/len }, 2000);
+         }
+       } else {
+         setSolverResult("UNSAT");
+       }
+     } catch (error) { setSolverResult("ERROR"); } finally { setIsSolving(false); }
+   };
 
   const handleNodeClick = useCallback((node, event) => {
       if (event && event.shiftKey) {
@@ -168,20 +172,21 @@ export default function App() {
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', background: '#020306' }}>
       <Sidebar
-        isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
-        fileName={fileName} numNodes={numNodes}
-        kValue={kValue} setKValue={setKValue} // <-- ADD THIS LINE
-        handleFileUpload={handleFileUpload} isSolving={isSolving} handleSolve={handleSolve}
-        searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch}
-        repulsion={repulsion} setRepulsion={setRepulsion}
-        minConnections={minConnections} setMinConnections={setMinConnections}
-        linkOpacity={linkOpacity} setLinkOpacity={setLinkOpacity}
-        linkThickness={linkThickness} setLinkThickness={setLinkThickness}
-        nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
-        curvedLinks={curvedLinks} setCurvedLinks={setCurvedLinks}
-        genNodes={genNodes} setGenNodes={setGenNodes}
-        genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
-      />
+         isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
+         fileName={fileName} numNodes={numNodes}
+         kValue={kValue} setKValue={setKValue}
+         handleFileUpload={handleFileUpload} isSolving={isSolving} handleSolve={handleSolve}
+         searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch}
+         repulsion={repulsion} setRepulsion={setRepulsion}
+         minConnections={minConnections} setMinConnections={setMinConnections}
+         linkOpacity={linkOpacity} setLinkOpacity={setLinkOpacity}
+         linkThickness={linkThickness} setLinkThickness={setLinkThickness}
+         nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
+         curvedLinks={curvedLinks} setCurvedLinks={setCurvedLinks}
+         genNodes={genNodes} setGenNodes={setGenNodes}
+         genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
+         solverResult={solverResult} setSolverResult={setSolverResult} clique={clique}
+       />
 
       <GraphCanvas
         ref={fgRef} graphData={graphData} clique={clique}
