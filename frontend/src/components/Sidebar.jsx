@@ -138,7 +138,7 @@ export default function Sidebar({
            }}>
              {solverResult === 'SAT' && (
                <>
-                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>✅ SATISFIABLE</div>
+                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>SATISFIABLE</div>
                  <div style={{ fontSize: '0.9em', marginBottom: '8px' }}>
                    Found a {kValue}-clique!
                  </div>
@@ -155,7 +155,7 @@ export default function Sidebar({
              )}
              {solverResult === 'UNSAT' && (
                <>
-                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>❌ UNSATISFIABLE</div>
+                 <div style={{ fontSize: '1em', fontWeight: 'bold', marginBottom: '8px' }}>UNSATISFIABLE</div>
                  <div style={{ fontSize: '0.9em' }}>
                    No {kValue}-clique exists in this graph.
                  </div>
