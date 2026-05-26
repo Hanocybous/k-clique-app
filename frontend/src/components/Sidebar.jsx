@@ -29,7 +29,7 @@ export default function Sidebar({
       </button>
 
       <div style={glassPanelStyle}>
-        <h2 style={{ margin: '0 0 20px 0', color: '#00ffff', fontSize: '1.4em' }}>Network Command</h2>
+        <h2 style={{ margin: '0 0 20px 0', color: '#00ffff', fontSize: '1.4em' }}>Social Network Menu</h2>
 
         {/* SYNTHETIC GENERATOR */}
         <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -56,7 +56,7 @@ export default function Sidebar({
         <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <label style={sectionLabelStyle}>1. Data Source</label>
             <label style={{ display: 'block', padding: '14px', background: 'rgba(42, 167, 255, 0.1)', border: '1px dashed #2aa7ff', borderRadius: '6px', textAlign: 'center', cursor: 'pointer', color: '#8fe8ff' }}>
-              {fileName ? `📄 ${fileName}` : "📁 Upload Graph File (.txt)"}
+              {fileName ? `📄 ${fileName}` : "Upload Graph File (.txt)"}
               <input type="file" accept=".txt" onChange={handleFileUpload} style={{ display: 'none' }} />
             </label>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.9em' }}>
@@ -75,7 +75,7 @@ export default function Sidebar({
 
          {/* CINEMATIC DEMO BUTTON */}
          <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-             <label style={sectionLabelStyle}>🎬 Presentation Mode</label>
+             <label style={sectionLabelStyle}>3. Presentation Mode</label>
              <button 
                disabled={isCinematic} 
                onClick={() => setIsCinematic(true)}
@@ -100,14 +100,14 @@ export default function Sidebar({
 
          
         <div style={{ marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <label style={sectionLabelStyle}>3. Universe Physics</label>
+            <label style={sectionLabelStyle}>4. Universe Physics</label>
             <span style={{ fontSize: '0.85em', color: '#9fbfdc' }}>Gravity Repulsion: {repulsion}</span>
             <input type="range" min="-500" max="-10" value={repulsion} onChange={e => setRepulsion(Number(e.target.value))} style={{ width: '100%', marginBottom: '10px' }} />
 
             <span style={{ fontSize: '0.85em', color: minConnections > 0 ? '#00ffff' : '#9fbfdc' }}>Hide Connections &lt; {minConnections}</span>
             <input type="range" min="0" max="10" value={minConnections} onChange={e => setMinConnections(Number(e.target.value))} style={{ width: '100%', marginBottom: '15px' }} />
 
-            <label style={sectionLabelStyle}>4. Visuals & Theme</label>
+            <label style={sectionLabelStyle}>5. Visuals & Theme</label>
             <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85em', marginBottom: '10px', color: '#9fbfdc' }}>
                 Use Curved Links
                 <input type="checkbox" checked={curvedLinks} onChange={e => setCurvedLinks(e.target.checked)} />
@@ -122,7 +122,7 @@ export default function Sidebar({
 
         {/* NEW: Z3 SOLVER PARAMETERS */}
         <div style={{ marginBottom: '30px' }}>
-            <label style={sectionLabelStyle}>5. Z3 Algorithm Parameters</label>
+            <label style={sectionLabelStyle}>6. Z3 Algorithm Parameters</label>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                <span style={{ fontSize: '0.9em', color: '#9fbfdc' }}>Target Clique Size (<i style={{color:'#ff00ff'}}>k</i>):</span>
                <strong style={{ color: '#ff00ff', fontSize: '1.2em' }}>{kValue}</strong>
