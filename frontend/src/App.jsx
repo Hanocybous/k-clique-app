@@ -40,6 +40,11 @@ export default function App() {
   // Cinematic Demo State
   const [isCinematic, setIsCinematic] = useState(false);
 
+  // Layout & Visual Theme States
+  const [layoutType, setLayoutType] = useState('force'); // 'force', 'circular', 'grid', 'hierarchical'
+  const [colorScheme, setColorScheme] = useState('degree'); // 'degree', 'betweenness', 'closeness', 'clustering'
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   // Solver Animation Logic (Sonar Pathfinder)
   useEffect(() => {
     let interval;
@@ -231,9 +236,9 @@ export default function App() {
 
   const maxConnections = Math.max(1, ...graphData.nodes.map(n => n.neighbors?.length || 0));
 
-  return (
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', background: '#020306' }}>
-      <Sidebar
+   return (
+     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', background: isDarkMode ? '#020306' : '#f5f5f7' }}>
+       <Sidebar
          isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
          fileName={fileName} numNodes={numNodes}
          kValue={kValue} setKValue={setKValue}
@@ -245,20 +250,24 @@ export default function App() {
          linkThickness={linkThickness} setLinkThickness={setLinkThickness}
          nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
          curvedLinks={curvedLinks} setCurvedLinks={setCurvedLinks}
-         genNodes={genNodes} setGenNodes={setGenNodes}
-         genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
-         solverResult={solverResult} setSolverResult={setSolverResult} clique={clique}
-         isCinematic={isCinematic} setIsCinematic={setIsCinematic}
-       />
+          genNodes={genNodes} setGenNodes={setGenNodes}
+          genEdges={genEdges} setGenEdges={setGenEdges} handleGenerateGraph={handleGenerateGraph}
+          solverResult={solverResult} setSolverResult={setSolverResult} clique={clique}
+          isCinematic={isCinematic} setIsCinematic={setIsCinematic}
+          layoutType={layoutType} setLayoutType={setLayoutType}
+          colorScheme={colorScheme} setColorScheme={setColorScheme}
+          isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}
+        />
 
-      <GraphCanvas
-        ref={fgRef} graphData={graphData} clique={clique}
-        selectedNode={selectedNode} minConnections={minConnections}
-        wormholeNodes={wormholeNodes} handleNodeClick={handleNodeClick}
-        scanningNode={scanningNode} maxConnections={maxConnections}
-        linkOpacity={linkOpacity} linkThickness={linkThickness}
-        nodeSizeScale={nodeSizeScale} curvedLinks={curvedLinks}
-      />
+       <GraphCanvas
+         ref={fgRef} graphData={graphData} clique={clique}
+         selectedNode={selectedNode} minConnections={minConnections}
+         wormholeNodes={wormholeNodes} handleNodeClick={handleNodeClick}
+         scanningNode={scanningNode} maxConnections={maxConnections}
+         linkOpacity={linkOpacity} linkThickness={linkThickness}
+         nodeSizeScale={nodeSizeScale} curvedLinks={curvedLinks}
+         layoutType={layoutType} colorScheme={colorScheme} isDarkMode={isDarkMode}
+       />
     </div>
   );
 }
